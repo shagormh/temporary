@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+void removeComments(FILE *srcFile) {
+    char c, prev;
+    bool inSingleLineComment = false;
+    bool inMultiLineComment = false;
+
+    prev = '\0';  // Initialize prev to a non-character
+
+    while ((c = fgetc(srcFile)) != EOF) {
+        if (inSingleLineComment) {
+            // Skip everything after "//" till the end of the line
+            if (c == '\n') {
+                inSingleLineComment = false; // End of single-line comment
+                putchar(c); // Print the newline
+            }
+            continue;
+        } else if (inMultiLineComment) {
+            // Skip everything inside "/*...*/"
+            if (prev == '*' && c == '/') {
+                inMultiLineComment = false; // End of multi-line comment
+                prev = '\0';  // Reset prev after multi-line comment ends
+            }
+            continue;
+        } else {
+            // Look for the start of comments
+            if (prev == '/' && c == '/') {
+                inSingleLineComment = true;
+            } else if (prev == '/' && c == '*') {
+                inMultiLineComment = true;
+            } else {
+                // If it's not a comment, print the current character
+                if (prev != '/') {
+                    putchar(prev);
+                }
+            }
+        }
+
+        prev = c;
+    }
+
+    // Print the last character if not part of a comment
+    if (!inSingleLineComment && !inMultiLineComment && prev != '/') {
+        putchar(prev);
+    }
+}
+
+int main() {
+    FILE *srcFile = fopen("nmbr_of_even.cpp", "r");  // Open the source code file
+    if (srcFile == NULL) {
+        printf("Error opening file.\n");
+        return 1;
+    }
+
+    removeComments(srcFile);  // Call function to remove comments
+    fclose(srcFile);  // Close the file
+
+    return 0;
+}
